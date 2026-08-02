@@ -9,4 +9,4 @@ retrieval:
   top_k: 5
 
 logging:
-  level: INFO
+  level: DEBUG
