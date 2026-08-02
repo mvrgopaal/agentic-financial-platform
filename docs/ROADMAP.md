@@ -145,3 +145,18 @@ Fraud Detection
 Compliance
 
 All built on one reusable platform.
+
+
+| Sprint    | Architecture Level |
+| --------- | ------------------ |
+| Sprint 01 | Foundation         |
+| Sprint 02 | Infrastructure     |
+| Sprint 03 | Observability      |
+| Sprint 04 | Observability      |
+| Sprint 05 | Observability      |
+| Sprint 06 | Service Layer      |
+| Sprint 07 | Security           |
+| Sprint 08 | Production Ready   |
+| Sprint 09 | Agentic AI         |
+| Sprint 10 | Cloud Scale        |
+
