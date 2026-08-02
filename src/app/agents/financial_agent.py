@@ -31,6 +31,8 @@ from app.reasoning.reasoning_engine import ReasoningEngine
 from app.tools.tool_registry import get_tool
 from app.configuration.configuration_manager import ConfigurationManager
 from app.providers.provider_factory import ProviderFactory
+from app.tracing.tracer import Tracer
+
 
 
 @dataclass(slots=True)
@@ -44,6 +46,8 @@ class FinancialAgentResult:
     final_context: dict[str, Any]
     retrieved_item_count: int
     ai_answer: str
+    trace_id: str
+    trace_spans: tuple
 
 
 class FinancialAgent:
@@ -100,23 +104,37 @@ class FinancialAgent:
             inputs=inputs,
 	    retrieval_count=self.config.retrieval.top_k
         )
-
+        tracer = Tracer()
         # 1. Determine the required business capabilities
         # and select matching tools.
-        planning_result = self.planner.plan(
-            PlanningRequest(
-                user_goal=user_goal,
-                available_inputs=inputs,
+        with tracer.span(
+            "planning",
+            component="capability_planner",
+        ):
+            planning_result = self.planner.plan(
+                PlanningRequest(
+                    user_goal=user_goal,
+                    available_inputs=inputs,
+                )
             )
-        )
 
         # 2. Convert selected tool names into complete
         # ToolDefinition objects.
-        selected_tool_definitions = [
-            get_tool(tool_name)
-            for tool_name in planning_result.selected_tools
-        ]
 
+        with tracer.span(
+            "dependency_graph",
+            selected_tool_count=len(
+                planning_result.selected_tools
+            ),
+        ):
+            selected_tool_definitions = [
+                get_tool(tool_name)
+                for tool_name in planning_result.selected_tools
+            ]
+
+            dependency_graph = self.dependency_builder.build(
+                selected_tool_definitions
+            )
         # 3. Build dependencies among only the selected tools.
         dependency_graph = self.dependency_builder.build(
             selected_tool_definitions
@@ -133,11 +151,17 @@ class FinancialAgent:
         )
 
         # 5. Execute deterministic tools in dependency order.
-        execution_results = self.execution_engine.execute(
-            graph=dependency_graph,
-            context=context,
-        )
 
+        with tracer.span(
+            "execution",
+            tool_count=len(
+                planning_result.selected_tools
+            ),
+        ):
+            execution_results = self.execution_engine.execute(
+                graph=dependency_graph,
+                context=context,
+            )
         failed_results = [
             result
             for result in execution_results
@@ -164,27 +188,42 @@ class FinancialAgent:
                     "calculations failed. "
                     f"Details: {failure_details}"
                 ),
+                trace_id=tracer.trace_id,
+                trace_spans=tracer.spans,
             )
 
         # 6. Retrieve guideline evidence relevant to the question.
-        knowledge = self.knowledge_retriever.retrieve(
-            query=user_goal,
-            k=self.config.retrieval.top_k,
-        )
 
+        with tracer.span(
+            "retrieval",
+            top_k=self.config.retrieval.top_k,
+        ):
+            knowledge = self.knowledge_retriever.retrieve(
+                query=user_goal,
+                k=self.config.retrieval.top_k,
+            )
         # 7. Combine verified calculations, retrieved evidence,
         # and the user's question into a structured prompt.
-        prompt = self.prompt_builder.build(
-            user_question=user_goal,
-            context=context,
-            knowledge=knowledge,
-        )
 
+        with tracer.span(
+            "prompt_building",
+            retrieved_item_count=len(knowledge.items),
+        ):
+            prompt = self.prompt_builder.build(
+                user_question=user_goal,
+                context=context,
+                knowledge=knowledge,
+            )
         # 8. Ask the reasoning model for a grounded explanation.
-        reasoning_result = self.reasoning_engine.reason(
-            prompt
-        )
 
+        with tracer.span(
+            "reasoning",
+            provider=self.config.llm.provider,
+            model=self.config.llm.model,
+        ):
+            reasoning_result = self.reasoning_engine.reason(
+                prompt
+            )
         if reasoning_result.success:
             ai_answer = reasoning_result.answer
         else:
@@ -201,6 +240,8 @@ class FinancialAgent:
             final_context=dict(context.values),
             retrieved_item_count=len(knowledge.items),
             ai_answer=ai_answer,
+            trace_id=tracer.trace_id,
+            trace_spans=tracer.spans,
         )
 
     def _validate_request(
@@ -274,6 +315,16 @@ def print_demo_result(
     Display a clean, investor-friendly demonstration result.
     """
 
+    print("\nRequest Trace")
+    print("-" * 70)
+    print(f"Trace ID: {result.trace_id}")
+
+    for span in result.trace_spans:
+        print(
+            f"{span.name}: "
+            f"{span.duration_ms:.2f} ms "
+            f"[{span.status}]"
+        )
     print("\n" + "=" * 70)
     print("FINANCIAL AGENT PLATFORM")
     print("Mortgage Qualification Assistant")
