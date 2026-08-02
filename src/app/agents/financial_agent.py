@@ -29,8 +29,8 @@ from app.execution.execution_result import ExecutionResult
 from app.rag.knowledge_retriever import KnowledgeRetriever
 from app.reasoning.reasoning_engine import ReasoningEngine
 from app.tools.tool_registry import get_tool
-from app.providers.llm.openai_provider import OpenAIProvider
-from app.providers.llm.mlx_provider import MLXProvider
+from app.configuration.configuration_manager import ConfigurationManager
+from app.providers.provider_factory import ProviderFactory
 
 
 @dataclass(slots=True)
@@ -53,16 +53,23 @@ class FinancialAgent:
     This class coordinates the platform components. It does not
     calculate mortgage values or directly call the LLM.
     """
-
     def __init__(self) -> None:
+        configuration_manager = ConfigurationManager()
+
+        provider_factory = ProviderFactory(
+            configuration_manager=configuration_manager
+        )
+
+        llm_provider = provider_factory.create_llm_provider()
+
+        self.config = configuration_manager.config
         self.planner = CapabilityPlanner()
         self.dependency_builder = DependencyBuilder()
         self.execution_engine = ExecutionEngine()
         self.knowledge_retriever = KnowledgeRetriever()
         self.prompt_builder = PromptBuilder()
         self.reasoning_engine = ReasoningEngine(
-           # provider=OpenAIProvider()
-             provider=MLXProvider()
+            provider=llm_provider
         )
     def run(
         self,
@@ -91,7 +98,7 @@ class FinancialAgent:
         self._validate_request(
             user_goal=user_goal,
             inputs=inputs,
-            retrieval_count=retrieval_count,
+	    retrieval_count=self.config.retrieval.top_k
         )
 
         # 1. Determine the required business capabilities
@@ -162,7 +169,7 @@ class FinancialAgent:
         # 6. Retrieve guideline evidence relevant to the question.
         knowledge = self.knowledge_retriever.retrieve(
             query=user_goal,
-            k=retrieval_count,
+            k=self.config.retrieval.top_k,
         )
 
         # 7. Combine verified calculations, retrieved evidence,
@@ -351,7 +358,6 @@ def main() -> None:
     result = agent.run(
         user_goal=user_goal,
         inputs=inputs,
-        retrieval_count=5,
     )
 
     print_demo_result(

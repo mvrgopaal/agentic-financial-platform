@@ -10,6 +10,7 @@ from app.rag.retrieved_knowledge import (
     RetrievedKnowledge,
 )
 from app.rag.retriever import search_documents
+from app.rag.vectorstore_validator import VectorStoreValidator
 
 
 class KnowledgeRetriever:
@@ -17,6 +18,11 @@ class KnowledgeRetriever:
     Retrieve mortgage guideline excerpts and convert them into
     application-level knowledge objects.
     """
+    def __init__(
+          self,
+          validator: VectorStoreValidator | None = None,
+      ) -> None:
+          self.validator = validator or VectorStoreValidator()
 
     def retrieve(
         self,
@@ -36,6 +42,8 @@ class KnowledgeRetriever:
             raise ValueError(
                 "k must be greater than zero."
             )
+
+        self.validator.validate()
 
         documents = search_documents(
             question=query.strip(),
