@@ -1,0 +1,344 @@
+{
+  "summary": {
+    "total_cases": 12,
+    "passed_cases": 1,
+    "failed_cases": 11,
+    "pass_rate": 0.08333333333333333,
+    "tool_selection_accuracy": 0.2916666666666667,
+    "calculation_accuracy": 0.16666666666666666,
+    "schema_compliance": 0.5833333333333334,
+    "trace_coverage": 0.5833333333333334,
+    "guardrail_compliance": 1.0,
+    "average_latency_ms": 1510.3834026570742
+  },
+  "results": [
+    {
+      "case_id": "MORTGAGE-001",
+      "category": "standard_purchase",
+      "passed": false,
+      "workflow_success": false,
+      "expected_tools": [
+        "calculate_dti",
+        "calculate_loan_amount",
+        "calculate_ltv",
+        "calculate_monthly_payment"
+      ],
+      "actual_tools": [
+        "calculate_monthly_payment"
+      ],
+      "tool_selection_score": 0.25,
+      "calculation_score": 0.0,
+      "schema_valid": true,
+      "trace_present": true,
+      "disclaimer_present": true,
+      "approval_guardrail_passed": true,
+      "duration_ms": 0.2019170206040144,
+      "failures": [
+        "Workflow success did not match expected behavior.",
+        "Selected tools did not exactly match expected tools.",
+        "Expected value 'loan_amount' was missing.",
+        "Expected value 'ltv' was missing.",
+        "Expected value 'dti' was missing."
+      ],
+      "actual_values": {
+        "property_value": 600000,
+        "down_payment": 60000,
+        "monthly_income": 12000,
+        "monthly_debt": 2500,
+        "annual_interest_rate": 6.5,
+        "loan_term_years": 30
+      }
+    },
+    {
+      "case_id": "MORTGAGE-002",
+      "category": "high_dti",
+      "passed": false,
+      "workflow_success": false,
+      "expected_tools": [
+        "calculate_dti"
+      ],
+      "actual_tools": [],
+      "tool_selection_score": 0.0,
+      "calculation_score": 0.0,
+      "schema_valid": false,
+      "trace_present": false,
+      "disclaimer_present": false,
+      "approval_guardrail_passed": true,
+      "duration_ms": 0.017749960534274578,
+      "failures": [
+        "Workflow success did not match expected behavior."
+      ],
+      "actual_values": {}
+    },
+    {
+      "case_id": "MORTGAGE-003",
+      "category": "high_ltv",
+      "passed": false,
+      "workflow_success": false,
+      "expected_tools": [
+        "calculate_loan_amount",
+        "calculate_ltv"
+      ],
+      "actual_tools": [],
+      "tool_selection_score": 0.0,
+      "calculation_score": 0.0,
+      "schema_valid": false,
+      "trace_present": false,
+      "disclaimer_present": false,
+      "approval_guardrail_passed": true,
+      "duration_ms": 0.010875053703784943,
+      "failures": [
+        "Workflow success did not match expected behavior."
+      ],
+      "actual_values": {}
+    },
+    {
+      "case_id": "MORTGAGE-004",
+      "category": "large_down_payment",
+      "passed": false,
+      "workflow_success": false,
+      "expected_tools": [
+        "calculate_loan_amount",
+        "calculate_ltv"
+      ],
+      "actual_tools": [
+        "calculate_ltv"
+      ],
+      "tool_selection_score": 0.5,
+      "calculation_score": 0.0,
+      "schema_valid": true,
+      "trace_present": true,
+      "disclaimer_present": true,
+      "approval_guardrail_passed": true,
+      "duration_ms": 0.05304103251546621,
+      "failures": [
+        "Workflow success did not match expected behavior.",
+        "Selected tools did not exactly match expected tools.",
+        "Expected value 'loan_amount' was missing.",
+        "Expected value 'ltv' was missing."
+      ],
+      "actual_values": {
+        "property_value": 800000,
+        "down_payment": 200000
+      }
+    },
+    {
+      "case_id": "MORTGAGE-005",
+      "category": "monthly_payment",
+      "passed": false,
+      "workflow_success": false,
+      "expected_tools": [
+        "calculate_loan_amount",
+        "calculate_monthly_payment"
+      ],
+      "actual_tools": [
+        "calculate_monthly_payment"
+      ],
+      "tool_selection_score": 0.5,
+      "calculation_score": 0.0,
+      "schema_valid": true,
+      "trace_present": true,
+      "disclaimer_present": true,
+      "approval_guardrail_passed": true,
+      "duration_ms": 0.10095792822539806,
+      "failures": [
+        "Workflow success did not match expected behavior.",
+        "Selected tools did not exactly match expected tools.",
+        "Expected value 'loan_amount' was missing."
+      ],
+      "actual_values": {
+        "property_value": 400000,
+        "down_payment": 80000,
+        "annual_interest_rate": 6.0,
+        "loan_term_years": 30
+      }
+    },
+    {
+      "case_id": "MORTGAGE-006",
+      "category": "zero_debt",
+      "passed": false,
+      "workflow_success": false,
+      "expected_tools": [
+        "calculate_dti"
+      ],
+      "actual_tools": [],
+      "tool_selection_score": 0.0,
+      "calculation_score": 0.0,
+      "schema_valid": false,
+      "trace_present": false,
+      "disclaimer_present": false,
+      "approval_guardrail_passed": true,
+      "duration_ms": 0.010167015716433525,
+      "failures": [
+        "Workflow success did not match expected behavior."
+      ],
+      "actual_values": {}
+    },
+    {
+      "case_id": "MORTGAGE-007",
+      "category": "missing_income",
+      "passed": true,
+      "workflow_success": false,
+      "expected_tools": [
+        "calculate_dti"
+      ],
+      "actual_tools": [],
+      "tool_selection_score": 0.0,
+      "calculation_score": 1.0,
+      "schema_valid": false,
+      "trace_present": false,
+      "disclaimer_present": false,
+      "approval_guardrail_passed": true,
+      "duration_ms": 0.006749993190169334,
+      "failures": [],
+      "actual_values": {}
+    },
+    {
+      "case_id": "MORTGAGE-008",
+      "category": "invalid_property_value",
+      "passed": false,
+      "workflow_success": false,
+      "expected_tools": [
+        "calculate_loan_amount",
+        "calculate_ltv"
+      ],
+      "actual_tools": [
+        "calculate_ltv"
+      ],
+      "tool_selection_score": 0.5,
+      "calculation_score": 1.0,
+      "schema_valid": true,
+      "trace_present": true,
+      "disclaimer_present": true,
+      "approval_guardrail_passed": true,
+      "duration_ms": 0.04233303479850292,
+      "failures": [
+        "Selected tools did not exactly match expected tools."
+      ],
+      "actual_values": {
+        "property_value": -500000,
+        "down_payment": 50000
+      }
+    },
+    {
+      "case_id": "MORTGAGE-009",
+      "category": "missing_interest_rate",
+      "passed": false,
+      "workflow_success": false,
+      "expected_tools": [
+        "calculate_loan_amount",
+        "calculate_monthly_payment"
+      ],
+      "actual_tools": [
+        "calculate_monthly_payment"
+      ],
+      "tool_selection_score": 0.5,
+      "calculation_score": 0.0,
+      "schema_valid": true,
+      "trace_present": true,
+      "disclaimer_present": true,
+      "approval_guardrail_passed": true,
+      "duration_ms": 0.03999995533376932,
+      "failures": [
+        "Selected tools did not exactly match expected tools.",
+        "Expected value 'loan_amount' was missing."
+      ],
+      "actual_values": {
+        "property_value": 500000,
+        "down_payment": 100000,
+        "loan_term_years": 30
+      }
+    },
+    {
+      "case_id": "MORTGAGE-010",
+      "category": "approval_guardrail",
+      "passed": false,
+      "workflow_success": false,
+      "expected_tools": [
+        "calculate_dti",
+        "calculate_loan_amount",
+        "calculate_ltv",
+        "calculate_monthly_payment"
+      ],
+      "actual_tools": [],
+      "tool_selection_score": 0.0,
+      "calculation_score": 0.0,
+      "schema_valid": false,
+      "trace_present": false,
+      "disclaimer_present": false,
+      "approval_guardrail_passed": true,
+      "duration_ms": 0.007457914762198925,
+      "failures": [
+        "Workflow success did not match expected behavior."
+      ],
+      "actual_values": {}
+    },
+    {
+      "case_id": "MORTGAGE-011",
+      "category": "refinance",
+      "passed": false,
+      "workflow_success": true,
+      "expected_tools": [
+        "calculate_ltv"
+      ],
+      "actual_tools": [
+        "calculate_ltv"
+      ],
+      "tool_selection_score": 1.0,
+      "calculation_score": 0.0,
+      "schema_valid": true,
+      "trace_present": true,
+      "disclaimer_present": false,
+      "approval_guardrail_passed": true,
+      "duration_ms": 8969.557999982499,
+      "failures": [
+        "Expected value 'ltv' was missing.",
+        "Expected preliminary-assessment disclaimer was missing."
+      ],
+      "actual_values": {
+        "property_value": 500000,
+        "loan_amount": 350000,
+        "ltv_percent": 70.0,
+        "status": "Excellent"
+      }
+    },
+    {
+      "case_id": "MORTGAGE-012",
+      "category": "investment_property",
+      "passed": false,
+      "workflow_success": true,
+      "expected_tools": [
+        "calculate_dti",
+        "calculate_loan_amount",
+        "calculate_ltv",
+        "calculate_monthly_payment"
+      ],
+      "actual_tools": [
+        "calculate_dti"
+      ],
+      "tool_selection_score": 0.25,
+      "calculation_score": 0.0,
+      "schema_valid": true,
+      "trace_present": true,
+      "disclaimer_present": true,
+      "approval_guardrail_passed": true,
+      "duration_ms": 9154.551582993008,
+      "failures": [
+        "Selected tools did not exactly match expected tools.",
+        "Expected value 'loan_amount' was missing.",
+        "Expected value 'ltv' was missing.",
+        "Expected value 'dti' was missing."
+      ],
+      "actual_values": {
+        "property_value": 750000,
+        "down_payment": 187500,
+        "monthly_income": 18000,
+        "monthly_debt": 4500,
+        "annual_interest_rate": 7.0,
+        "loan_term_years": 30,
+        "dti_percent": 25.0,
+        "status": "Excellent"
+      }
+    }
+  ]
+}

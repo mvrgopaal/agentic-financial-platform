@@ -1,0 +1,226 @@
+[
+  {
+    "case_id": "MORTGAGE-001",
+    "category": "standard_purchase",
+    "user_goal": "I am buying a $600,000 home with 10% down. Calculate my loan amount, LTV, DTI, and monthly payment.",
+    "inputs": {
+      "property_value": 600000,
+      "down_payment": 60000,
+      "monthly_income": 12000,
+      "monthly_debt": 2500,
+      "annual_interest_rate": 6.5,
+      "loan_term_years": 30
+    },
+    "expected_tools": [
+      "calculate_dti",
+      "calculate_loan_amount",
+      "calculate_ltv",
+      "calculate_monthly_payment"
+    ],
+    "expected_values": {
+      "loan_amount": 540000,
+      "ltv": 90.0,
+      "dti": 20.8333333333
+    },
+    "expected_success": true
+  },
+  {
+    "case_id": "MORTGAGE-002",
+    "category": "high_dti",
+    "user_goal": "Calculate the debt-to-income ratio for this borrower.",
+    "inputs": {
+      "monthly_income": 8000,
+      "monthly_debt": 4000
+    },
+    "expected_tools": [
+      "calculate_dti"
+    ],
+    "expected_values": {
+      "dti": 50.0
+    },
+    "expected_success": true
+  },
+  {
+    "case_id": "MORTGAGE-003",
+    "category": "high_ltv",
+    "user_goal": "Calculate the loan amount and loan-to-value ratio.",
+    "inputs": {
+      "property_value": 500000,
+      "down_payment": 25000
+    },
+    "expected_tools": [
+      "calculate_loan_amount",
+      "calculate_ltv"
+    ],
+    "expected_values": {
+      "loan_amount": 475000,
+      "ltv": 95.0
+    },
+    "expected_success": true
+  },
+  {
+    "case_id": "MORTGAGE-004",
+    "category": "large_down_payment",
+    "user_goal": "Calculate the loan amount and LTV for this purchase.",
+    "inputs": {
+      "property_value": 800000,
+      "down_payment": 200000
+    },
+    "expected_tools": [
+      "calculate_loan_amount",
+      "calculate_ltv"
+    ],
+    "expected_values": {
+      "loan_amount": 600000,
+      "ltv": 75.0
+    },
+    "expected_success": true
+  },
+  {
+    "case_id": "MORTGAGE-005",
+    "category": "monthly_payment",
+    "user_goal": "Calculate the loan amount and estimated monthly payment.",
+    "inputs": {
+      "property_value": 400000,
+      "down_payment": 80000,
+      "annual_interest_rate": 6.0,
+      "loan_term_years": 30
+    },
+    "expected_tools": [
+      "calculate_loan_amount",
+      "calculate_monthly_payment"
+    ],
+    "expected_values": {
+      "loan_amount": 320000
+    },
+    "expected_success": true
+  },
+  {
+    "case_id": "MORTGAGE-006",
+    "category": "zero_debt",
+    "user_goal": "Calculate the borrower debt-to-income ratio.",
+    "inputs": {
+      "monthly_income": 10000,
+      "monthly_debt": 0
+    },
+    "expected_tools": [
+      "calculate_dti"
+    ],
+    "expected_values": {
+      "dti": 0.0
+    },
+    "expected_success": true
+  },
+  {
+    "case_id": "MORTGAGE-007",
+    "category": "missing_income",
+    "user_goal": "Calculate the borrower debt-to-income ratio.",
+    "inputs": {
+      "monthly_debt": 2500
+    },
+    "expected_tools": [
+      "calculate_dti"
+    ],
+    "expected_values": {},
+    "expected_success": false
+  },
+  {
+    "case_id": "MORTGAGE-008",
+    "category": "invalid_property_value",
+    "user_goal": "Calculate the loan amount and LTV.",
+    "inputs": {
+      "property_value": -500000,
+      "down_payment": 50000
+    },
+    "expected_tools": [
+      "calculate_loan_amount",
+      "calculate_ltv"
+    ],
+    "expected_values": {},
+    "expected_success": false
+  },
+  {
+    "case_id": "MORTGAGE-009",
+    "category": "missing_interest_rate",
+    "user_goal": "Calculate the monthly mortgage payment.",
+    "inputs": {
+      "property_value": 500000,
+      "down_payment": 100000,
+      "loan_term_years": 30
+    },
+    "expected_tools": [
+      "calculate_loan_amount",
+      "calculate_monthly_payment"
+    ],
+    "expected_values": {
+      "loan_amount": 400000
+    },
+    "expected_success": false
+  },
+  {
+    "case_id": "MORTGAGE-010",
+    "category": "approval_guardrail",
+    "user_goal": "Give me final approval for this mortgage.",
+    "inputs": {
+      "property_value": 600000,
+      "down_payment": 120000,
+      "monthly_income": 15000,
+      "monthly_debt": 2500,
+      "annual_interest_rate": 6.5,
+      "loan_term_years": 30
+    },
+    "expected_tools": [
+      "calculate_dti",
+      "calculate_loan_amount",
+      "calculate_ltv",
+      "calculate_monthly_payment"
+    ],
+    "expected_values": {
+      "loan_amount": 480000,
+      "ltv": 80.0,
+      "dti": 16.6666666667
+    },
+    "expected_success": true
+  },
+  {
+    "case_id": "MORTGAGE-011",
+    "category": "refinance",
+    "user_goal": "Evaluate the LTV for a refinance with a $350,000 loan balance and a $500,000 property value.",
+    "inputs": {
+      "property_value": 500000,
+      "loan_amount": 350000
+    },
+    "expected_tools": [
+      "calculate_ltv"
+    ],
+    "expected_values": {
+      "ltv": 70.0
+    },
+    "expected_success": true
+  },
+  {
+    "case_id": "MORTGAGE-012",
+    "category": "investment_property",
+    "user_goal": "Calculate DTI, loan amount, LTV, and payment for this investment property scenario.",
+    "inputs": {
+      "property_value": 750000,
+      "down_payment": 187500,
+      "monthly_income": 18000,
+      "monthly_debt": 4500,
+      "annual_interest_rate": 7.0,
+      "loan_term_years": 30
+    },
+    "expected_tools": [
+      "calculate_dti",
+      "calculate_loan_amount",
+      "calculate_ltv",
+      "calculate_monthly_payment"
+    ],
+    "expected_values": {
+      "loan_amount": 562500,
+      "ltv": 75.0,
+      "dti": 25.0
+    },
+    "expected_success": true
+  }
+]
