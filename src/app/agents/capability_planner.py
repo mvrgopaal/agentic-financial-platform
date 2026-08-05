@@ -1,8 +1,10 @@
 """
 Capability-based planning for the Financial AI Agent.
 
-This first version maps a user goal to business capabilities,
-then discovers matching tools from the registry.
+This planner maps a user goal to business capabilities,
+discovers matching tools from the registry, expands required
+producer capabilities, validates missing inputs, and builds
+an execution plan.
 
 It does not execute tools.
 """
@@ -17,28 +19,20 @@ from app.agents.dependency_execution_engine import (
     ExecutionStep,
 )
 from app.tools.tool_definition import ToolDefinition
-from app.tools.tool_registry import (
-    find_tools_by_capability,
-)
+from app.tools.tool_registry import find_tools_by_capability
 
 
 @dataclass(frozen=True)
 class PlanningRequest:
-    """
-    Information supplied to the planner.
-    """
+    """Information supplied to the planner."""
 
     user_goal: str
-    available_inputs: dict[str, Any] = field(
-        default_factory=dict
-    )
+    available_inputs: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
 class CapabilityRequirement:
-    """
-    A business capability needed to satisfy the user goal.
-    """
+    """A business capability needed to satisfy the user goal."""
 
     name: str
     reason: str
@@ -47,9 +41,7 @@ class CapabilityRequirement:
 
 @dataclass(frozen=True)
 class PlanningResult:
-    """
-    Planner output before execution.
-    """
+    """Planner output before execution."""
 
     goal: str
     capabilities: tuple[CapabilityRequirement, ...]
@@ -59,21 +51,17 @@ class PlanningResult:
 
 
 class CapabilityPlanner:
-    """
-    Builds execution plans from business capabilities.
-    """
+    """Build execution plans from business capabilities."""
 
-    def plan(
-        self,
-        request: PlanningRequest,
-    ) -> PlanningResult:
-        capabilities = self._infer_capabilities(
-            request.user_goal
+    def plan(self, request: PlanningRequest) -> PlanningResult:
+        capabilities = self._infer_capabilities(request.user_goal)
+
+        capabilities = self._expand_dependencies(
+            capabilities=capabilities,
+            available_inputs=request.available_inputs,
         )
 
-        selected_tools = self._select_tools(
-            capabilities
-        )
+        selected_tools = self._select_tools(capabilities)
 
         missing_inputs = self._find_missing_inputs(
             tools=selected_tools,
@@ -84,7 +72,7 @@ class CapabilityPlanner:
 
         if not missing_inputs:
             execution_plan = self._build_execution_plan(
-		user_question=request.user_goal,
+                user_question=request.user_goal,
                 tools=selected_tools,
                 available_inputs=request.available_inputs,
             )
@@ -92,13 +80,8 @@ class CapabilityPlanner:
         return PlanningResult(
             goal=request.user_goal,
             capabilities=tuple(capabilities),
-            selected_tools=tuple(
-                tool.name
-                for tool in selected_tools
-            ),
-            missing_inputs=tuple(
-                sorted(missing_inputs)
-            ),
+            selected_tools=tuple(tool.name for tool in selected_tools),
+            missing_inputs=tuple(sorted(missing_inputs)),
             execution_plan=execution_plan,
         )
 
@@ -107,125 +90,190 @@ class CapabilityPlanner:
         user_goal: str,
     ) -> list[CapabilityRequirement]:
         """
-        Infer business capabilities from the user's goal.
+        Infer all supported business capabilities from the user goal.
 
-        Version 1 uses simple goal classification.
-        A later version can use an LLM with structured output.
+        Version 1 uses deterministic phrase matching.
+        A later version may use an LLM with structured output.
         """
 
-        normalized_goal = user_goal.lower()
+        normalized_goal = user_goal.strip().lower()
 
-        requirements: list[
-            CapabilityRequirement
-        ] = []
+        if not normalized_goal:
+            raise ValueError("The user goal cannot be empty.")
+
+        requirements: list[CapabilityRequirement] = []
+
+        qualification_phrases = (
+            "qualify",
+            "qualification",
+            "prequalify",
+            "prequalification",
+            "can i afford",
+        )
 
         if any(
             phrase in normalized_goal
-            for phrase in (
-                "qualify",
-                "qualification",
-                "prequalify",
-                "prequalification",
-                "can i afford",
-            )
+            for phrase in qualification_phrases
         ):
             requirements.extend(
                 [
                     CapabilityRequirement(
                         name="loan_amount_calculation",
-                        reason=(
-                            "Determine the requested "
-                            "mortgage balance."
-                        ),
+                        reason="Determine the requested mortgage balance.",
                     ),
                     CapabilityRequirement(
                         name="loan_to_value_analysis",
-                        reason=(
-                            "Measure collateral leverage."
-                        ),
+                        reason="Measure collateral leverage.",
                     ),
                     CapabilityRequirement(
                         name="debt_to_income_analysis",
-                        reason=(
-                            "Measure borrower repayment "
-                            "capacity."
-                        ),
+                        reason="Measure borrower repayment capacity.",
                     ),
                     CapabilityRequirement(
                         name="mortgage_payment_calculation",
-                        reason=(
-                            "Estimate monthly principal "
-                            "and interest."
-                        ),
+                        reason="Estimate monthly principal and interest.",
                     ),
                 ]
             )
-
-        elif any(
-            phrase in normalized_goal
-            for phrase in (
-                "monthly payment",
-                "mortgage payment",
-                "principal and interest",
-            )
-        ):
-            requirements.append(
-                CapabilityRequirement(
-                    name="mortgage_payment_calculation",
-                    reason=(
-                        "Estimate monthly principal "
-                        "and interest."
-                    ),
-                )
-            )
-
-        elif "dti" in normalized_goal:
-            requirements.append(
-                CapabilityRequirement(
-                    name="debt_to_income_analysis",
-                    reason=(
-                        "Calculate the borrower's "
-                        "debt-to-income ratio."
-                    ),
-                )
-            )
-
-        elif "ltv" in normalized_goal:
-            requirements.append(
-                CapabilityRequirement(
-                    name="loan_to_value_analysis",
-                    reason=(
-                        "Calculate the property's "
-                        "loan-to-value ratio."
-                    ),
-                )
-            )
-
         else:
+            if any(
+                phrase in normalized_goal
+                for phrase in (
+                    "dti",
+                    "debt-to-income",
+                    "debt to income",
+                )
+            ):
+                requirements.append(
+                    CapabilityRequirement(
+                        name="debt_to_income_analysis",
+                        reason=(
+                            "Calculate the borrower's debt-to-income ratio."
+                        ),
+                    )
+                )
+
+            if any(
+                phrase in normalized_goal
+                for phrase in (
+                    "loan amount",
+                    "mortgage amount",
+                    "borrow amount",
+                )
+            ):
+                requirements.append(
+                    CapabilityRequirement(
+                        name="loan_amount_calculation",
+                        reason="Calculate the mortgage balance.",
+                    )
+                )
+
+            if any(
+                phrase in normalized_goal
+                for phrase in (
+                    "ltv",
+                    "loan-to-value",
+                    "loan to value",
+                )
+            ):
+                requirements.append(
+                    CapabilityRequirement(
+                        name="loan_to_value_analysis",
+                        reason=(
+                            "Calculate the property's loan-to-value ratio."
+                        ),
+                    )
+                )
+
+            if any(
+                phrase in normalized_goal
+                for phrase in (
+                    "monthly payment",
+                    "mortgage payment",
+                    "principal and interest",
+                    "payment",
+                )
+            ):
+                requirements.append(
+                    CapabilityRequirement(
+                        name="mortgage_payment_calculation",
+                        reason="Estimate monthly principal and interest.",
+                    )
+                )
+
+        if not requirements:
             raise ValueError(
                 "The planner could not infer a supported "
                 "financial capability from the user goal."
             )
 
-        return requirements
+        return self._deduplicate_capabilities(requirements)
+
+    def _expand_dependencies(
+        self,
+        capabilities: list[CapabilityRequirement],
+        available_inputs: dict[str, Any],
+    ) -> list[CapabilityRequirement]:
+        """
+        Add producer capabilities when selected capabilities
+        require data that the user did not supply directly.
+        """
+
+        expanded = list(capabilities)
+
+        capability_names = {
+            capability.name
+            for capability in expanded
+        }
+
+        requires_loan_amount = any(
+            capability_name in capability_names
+            for capability_name in (
+                "loan_to_value_analysis",
+                "mortgage_payment_calculation",
+            )
+        )
+
+        if (
+            requires_loan_amount
+            and "loan_amount" not in available_inputs
+            and "loan_amount_calculation" not in capability_names
+        ):
+            expanded.append(
+                CapabilityRequirement(
+                    name="loan_amount_calculation",
+                    reason=(
+                        "Produce the loan amount required by "
+                        "a dependent financial calculation."
+                    ),
+                )
+            )
+
+        return self._deduplicate_capabilities(expanded)
+
+    def _deduplicate_capabilities(
+        self,
+        capabilities: list[CapabilityRequirement],
+    ) -> list[CapabilityRequirement]:
+        """Remove duplicates while preserving order."""
+
+        unique: dict[str, CapabilityRequirement] = {}
+
+        for capability in capabilities:
+            unique.setdefault(capability.name, capability)
+
+        return list(unique.values())
 
     def _select_tools(
         self,
         capabilities: list[CapabilityRequirement],
     ) -> list[ToolDefinition]:
-        """
-        Select one active tool for each required capability.
-        """
+        """Select one active tool for each required capability."""
 
-        selected: dict[
-            tuple[str, str],
-            ToolDefinition,
-        ] = {}
+        selected: dict[tuple[str, str], ToolDefinition] = {}
 
         for requirement in capabilities:
-            matches = find_tools_by_capability(
-                requirement.name
-            )
+            matches = find_tools_by_capability(requirement.name)
 
             if not matches:
                 if requirement.required:
@@ -233,17 +281,10 @@ class CapabilityPlanner:
                         "No active tool supports capability "
                         f"'{requirement.name}'."
                     )
-
                 continue
 
             chosen_tool = matches[0]
-
-            selected[
-                (
-                    chosen_tool.name,
-                    chosen_tool.version,
-                )
-            ] = chosen_tool
+            selected[(chosen_tool.name, chosen_tool.version)] = chosen_tool
 
         return list(selected.values())
 
@@ -275,14 +316,15 @@ class CapabilityPlanner:
 
     def _build_execution_plan(
         self,
-	user_question: str,
+        user_question: str,
         tools: list[ToolDefinition],
         available_inputs: dict[str, Any],
     ) -> ExecutionPlan:
         """
-        Build the first metadata-driven execution plan.
+        Build the metadata-driven execution plan.
 
-        Dependency wiring will be improved in the next step.
+        Dependency execution is handled by the dependency graph
+        during runtime. This object preserves the selected steps.
         """
 
         steps: list[ExecutionStep] = []
@@ -304,9 +346,10 @@ class CapabilityPlanner:
             )
 
         return ExecutionPlan(
-	    user_question=user_question,
+            user_question=user_question,
             steps=tuple(steps),
         )
+
 
 if __name__ == "__main__":
     from pprint import pprint
@@ -316,8 +359,8 @@ if __name__ == "__main__":
     result = planner.plan(
         PlanningRequest(
             user_goal=(
-                "Can this borrower qualify for a "
-                "$600,000 property?"
+                "Calculate DTI, loan amount, LTV, "
+                "and monthly payment."
             ),
             available_inputs={
                 "property_value": 600000,

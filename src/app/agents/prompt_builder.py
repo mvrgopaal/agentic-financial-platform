@@ -21,12 +21,12 @@ class PromptBuilder:
     ) -> PromptDefinition:
 
         system_prompt = (
-            "You are an experienced mortgage underwriter. "
-            "Use only the supplied calculations and "
-            "retrieved mortgage guidelines. "
-            "Do not invent financial values."
+            "You are an experienced mortgage decision-support "
+            "assistant. Use only the supplied verified calculations "
+            "and retrieved mortgage guidelines. Do not invent "
+            "financial values, borrower attributes, loan-program "
+            "eligibility, or final approval decisions."
         )
-
         context_summary = self._build_context_summary(
             context
         )
@@ -39,12 +39,14 @@ class PromptBuilder:
 
         output_instructions = (
             "Provide:\n"
-            "1. Qualification decision\n"
-            "2. Supporting calculations\n"
-            "3. Relevant guideline references\n"
-            "4. Recommendations"
+            "1. Preliminary qualification assessment\n"
+            "2. Supporting verified calculations\n"
+            "3. Relevant guideline evidence\n"
+            "4. Missing information or limitations\n"
+            "5. Recommended next steps\n\n"
+            "Do not approve, deny, guarantee, or make a final "
+            "credit or underwriting decision."
         )
-
         return PromptDefinition(
             system_prompt=system_prompt,
             user_prompt=user_question,
