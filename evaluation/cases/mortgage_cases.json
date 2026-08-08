@@ -19,8 +19,8 @@
     ],
     "expected_values": {
       "loan_amount": 540000,
-      "ltv": 90.0,
-      "dti": 20.8333333333
+      "ltv_percent": 90.0,
+      "dti_percent": 20.8333333333
     },
     "expected_success": true
   },
@@ -36,7 +36,7 @@
       "calculate_dti"
     ],
     "expected_values": {
-      "dti": 50.0
+      "dti_percent": 50.0
     },
     "expected_success": true
   },
@@ -54,7 +54,7 @@
     ],
     "expected_values": {
       "loan_amount": 475000,
-      "ltv": 95.0
+      "ltv_percent": 95.0
     },
     "expected_success": true
   },
@@ -72,7 +72,7 @@
     ],
     "expected_values": {
       "loan_amount": 600000,
-      "ltv": 75.0
+      "ltv_percent": 75.0
     },
     "expected_success": true
   },
@@ -107,7 +107,7 @@
       "calculate_dti"
     ],
     "expected_values": {
-      "dti": 0.0
+      "dti_percent": 0.0
     },
     "expected_success": true
   },
@@ -177,8 +177,8 @@
     ],
     "expected_values": {
       "loan_amount": 480000,
-      "ltv": 80.0,
-      "dti": 16.6666666667
+      "ltv_percent": 80.0,
+      "dti_percent": 16.6666666667
     },
     "expected_success": true
   },
@@ -194,7 +194,7 @@
       "calculate_ltv"
     ],
     "expected_values": {
-      "ltv": 70.0
+      "ltv_percent": 70.0
     },
     "expected_success": true
   },
@@ -218,8 +218,8 @@
     ],
     "expected_values": {
       "loan_amount": 562500,
-      "ltv": 75.0,
-      "dti": 25.0
+      "ltv_percent": 75.0,
+      "dti_percent": 25.0
     },
     "expected_success": true
   }
